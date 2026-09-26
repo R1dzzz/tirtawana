@@ -107,6 +107,7 @@ export class GameScene extends Phaser.Scene {
   private villageSystem!: VillageSystem;
   private resonanceSystem!: ResonanceSystem;
   private foundPOIs: string[] = [];
+  private npcRefreshTimer: number = 0;
 
   private inventory!: InventorySystem;
   private farming!: FarmingSystem;
