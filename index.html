@@ -23,6 +23,23 @@
 </head>
 <body>
   <div id="game-container"></div>
+  <div id="err" style="position:fixed;top:0;left:0;right:0;max-height:40%;overflow:auto;background:rgba(120,0,0,.95);color:#fff;font:12px/1.4 monospace;padding:8px;z-index:9999;display:none;white-space:pre-wrap;"></div>
+  <script>
+    (function () {
+      function show(msg) {
+        var d = document.getElementById('err');
+        d.style.display = 'block';
+        d.textContent += msg + '\n';
+      }
+      window.addEventListener('error', function (e) {
+        show('ERROR: ' + (e.message || e.error) + ' @ ' + (e.filename || '').split('/').pop() + ':' + (e.lineno || ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        show('PROMISE: ' + (r && (r.stack || r.message) || r));
+      });
+    })();
+  </script>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

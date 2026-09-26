@@ -47,21 +47,32 @@ export class TilemapManager {
   }
 
   private populateRegion(region: RegionData): void {
-    if (!this.groundLayer || !this.collisionLayer) return;
-    const { mapWidth, mapHeight } = region;
-    for (let y = 0; y < mapHeight; y++) {
-      for (let x = 0; x < mapWidth; x++) {
-        let tile = 0; // grass
-        if (x === 0 || y === 0 || x === mapWidth - 1 || y === mapHeight - 1) {
-          tile = 1; // water border
-          this.collisionLayer.putTileAt(1, x, y);
-        } else if (y === Math.floor(mapHeight / 2) || x === Math.floor(mapWidth / 2)) {
-          tile = 2; // path cross
-        } else if (Math.random() < 0.05) {
-          tile = 3; // flowers
-        }
-        this.groundLayer.putTileAt(tile, x, y);
-      }
+    if (!this.groundLayer || !this.collisionLayer || !this.tilemap) return;
+    const W = region.mapWidth, H = region.mapHeight;
+    const midY = Math.floor(H / 2), midX = Math.floor(W / 2);
+
+    // Base: whole map grass — one block fill instead of W*H putTileAt calls
+    this.tilemap.fill(0, 0, 0, W, H, this.groundLayer);
+    // Path cross (two block fills)
+    this.tilemap.fill(2, 0, midY, W, 1, this.groundLayer);
+    this.tilemap.fill(2, midX, 0, 1, H, this.groundLayer);
+    // Water border (4 block fills on ground + collision)
+    this.tilemap.fill(1, 0, 0, W, 1, this.groundLayer);
+    this.tilemap.fill(1, 0, H - 1, W, 1, this.groundLayer);
+    this.tilemap.fill(1, 0, 0, 1, H, this.groundLayer);
+    this.tilemap.fill(1, W - 1, 0, 1, H, this.groundLayer);
+    this.tilemap.fill(1, 0, 0, W, 1, this.collisionLayer);
+    this.tilemap.fill(1, 0, H - 1, W, 1, this.collisionLayer);
+    this.tilemap.fill(1, 0, 0, 1, H, this.collisionLayer);
+    this.tilemap.fill(1, W - 1, 0, 1, H, this.collisionLayer);
+
+    // Sparse flowers (~5%, only a few hundred putTileAt)
+    const flowers = Math.floor(W * H * 0.05);
+    for (let i = 0; i < flowers; i++) {
+      const x = 1 + Math.floor(Math.random() * (W - 2));
+      const y = 1 + Math.floor(Math.random() * (H - 2));
+      if (y === midY || x === midX) continue;
+      this.groundLayer.putTileAt(3, x, y);
     }
   }
 

@@ -1,5 +1,5 @@
 import { IndexedDBAdapter } from './IndexedDBAdapter';
-import { SaveData, createDefaultSave, SAVE_VERSION } from '../data/types/SaveTypes';
+import { SaveData, createDefaultSave, SAVE_VERSION, makeUUID } from '../data/types/SaveTypes';
 import { GAME_CONFIG } from '../app/Config';
 import { EventBus, Events } from '../core/EventBus';
 import { Logger } from '../core/Logger';
@@ -104,7 +104,7 @@ export class SaveManager {
   private async persist(slotId: string): Promise<void> {
     if (!this.currentSave) return;
     this.currentSave.updatedAt = Date.now();
-    this.currentSave.revisionId = crypto.randomUUID();
+    this.currentSave.revisionId = makeUUID();
     this.currentSave.syncStatus = 'local';
     try {
       await this.adapter.put('saves', { slotId, ...this.currentSave });

@@ -10,6 +10,7 @@ import { QuestScene } from './scenes/QuestScene';
 import { CraftingScene } from './scenes/CraftingScene';
 import { FestivalScene } from './scenes/FestivalScene';
 import { VillageScene } from './scenes/VillageScene';
+import { LoadingScene } from './scenes/LoadingScene';
 
 const config: any = {
   type: Phaser.AUTO,
@@ -28,7 +29,7 @@ const config: any = {
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 0 }, debug: false }
   },
-  scene: [BootScene, TitleScene, RotateScene, GameScene, HUDScene, ShopScene, DialogueScene, QuestScene, CraftingScene, FestivalScene, VillageScene]
+  scene: [BootScene, TitleScene, RotateScene, GameScene, HUDScene, ShopScene, DialogueScene, QuestScene, CraftingScene, FestivalScene, VillageScene, LoadingScene]
 };
 
 const game = new Phaser.Game(config);

@@ -28,7 +28,7 @@ export class TitleScene extends Phaser.Scene {
     const options = [
       { label: 'New Game', action: () => this.startNewGame() },
       ...(this.hasSave ? [{ label: 'Continue', action: () => this.continueGame() }] : []),
-      { label: 'Settings', action: () => console.log('Settings: coming in M20') }
+      { label: 'Cloud Sync', action: () => this.cloudSync() }
     ];
 
     options.forEach((opt, i) => {
@@ -62,13 +62,32 @@ export class TitleScene extends Phaser.Scene {
   private startNewGame(): void {
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
     saveManager.newGame('Traveler').then(() => {
-      this.scene.start('GameScene');
-      this.scene.launch('HUDScene');
+      this.scene.start('LoadingScene'); // shows feedback while GameScene builds
+    }).catch((e: any) => {
+      (window as any).dispatchEvent(new ErrorEvent('error', { message: 'NewGame failed: ' + (e?.message || e) }));
     });
   }
 
   private continueGame(): void {
-    this.scene.start('GameScene');
-    this.scene.launch('HUDScene');
+    try {
+      this.scene.start('LoadingScene');
+    } catch (e: any) {
+      (window as any).dispatchEvent(new ErrorEvent('error', { message: 'Continue failed: ' + (e?.message || e) }));
+    }
+  }
+
+  private async cloudSync(): Promise<void> {
+    const status = this.add.text(this.scale.width / 2, this.scale.height * 0.88, '', {
+      fontFamily: 'monospace', fontSize: '12px', color: '#a0c0a0'
+    }).setOrigin(0.5);
+    if (!ServiceLocator.has('SyncManager')) {
+      status.setText('Cloud sync not configured — set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY');
+      return;
+    }
+    const sync = ServiceLocator.get<any>('SyncManager');
+    status.setText('Signing in to cloud...');
+    const ok = await sync.signIn();
+    status.setText(ok ? 'Cloud sync ON ✓ (anonymous)' : 'Sign-in failed — offline play unaffected');
+    this.time.delayedCall(4000, () => status.destroy());
   }
 }
