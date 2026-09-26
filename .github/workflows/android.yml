@@ -1,0 +1,47 @@
+name: android-release
+# Trigger: push a tag like v1.0.0 — builds a signed APK + AAB in the cloud.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+      - run: npm run build
+
+      # Capacitor: create android project if absent, then sync web build into it
+      - run: npx cap add android || true
+      - run: npx cap sync android
+
+      # Decode signing keystore from repo secret (create once: keytool -genkey)
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+        if: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Build AAB
+        working-directory: android
+        run: ./gradlew bundleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tirtawana-android
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
